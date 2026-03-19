@@ -3,6 +3,10 @@
   "module": "index.ts",
   "type": "module",
   "private": true,
+  "scripts": {
+    "dev": "bun run --watch src/index.ts",
+    "start": "bun run src/index.ts"
+  },
   "devDependencies": {
     "@types/bun": "latest"
   },
@@ -13,6 +17,7 @@
     "@prisma/client": "^7.5.0",
     "hono": "^4.12.8",
     "prisma": "^7.5.0",
-    "ulid": "^3.0.2"
+    "ulid": "^3.0.2",
+    "zod": "^4.3.6"
   }
 }
