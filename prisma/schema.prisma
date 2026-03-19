@@ -1,0 +1,52 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "mysql"
+}
+
+model Restaurant {
+  id            Int      @id @default(autoincrement())
+  name          String
+  address       String
+  phone         String?
+  opening_hours String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  menuItems MenuItem[]
+
+  @@map("restaurants")
+}
+
+model MenuItem {
+  id           Int      @id @default(autoincrement())
+  name         String
+  description  String?
+  price        Decimal  @db.Decimal(10, 2)
+  category     Category @default(MAIN)
+  is_available Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  restaurantId Int
+  restaurant   Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+
+  @@map("menu_items")
+}
+
+enum Category {
+  APPETIZER
+  MAIN
+  DESSERT
+  DRINK
+
+  @@map("category")
+}
