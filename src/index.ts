@@ -1,15 +1,30 @@
 import { Hono } from "hono";
 import { logger } from "hono/logger";
 import { cors } from "hono/cors";
-import { errorHandler } from "./middlewares/errorHandler";
+import { AppError } from "./middlewares/errorHandler";
+import restaurantRoutes from "./routes/restaurant.route";
+import { PrismaInstance } from "./utils/prisma";
 
-
-const app = new Hono();
+const app = new Hono().basePath("/api");
 
 app.use("*", logger());
 app.use("*", cors());
-app.use("*", errorHandler);
 
 app.get("/", (c) => c.json({ message: "Restaurant API v1" }));
+app.route("/restaurants", restaurantRoutes);
 
-export default { port: process.env.PORT ?? 3000, fetch: app.fetch };
+PrismaInstance.getInstance()
+
+app.onError((err, c) => {
+    if (err instanceof AppError) {
+        return c.json({ success: false, message: err.message }, err.statusCode as any);
+    }
+    console.error(err);
+    return c.json({ success: false, message: "Internal server error" }, 500);
+});
+
+export default {
+    port: process.env.PORT ?? 3000,
+    fetch: app.fetch,
+    idleTimeout: 60, // detik
+};
