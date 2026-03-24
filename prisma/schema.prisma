@@ -13,7 +13,7 @@ datasource db {
 }
 
 model Restaurant {
-  id            Int      @id @default(autoincrement())
+  id            String   @id @unique
   name          String
   address       String
   phone         String?
@@ -27,7 +27,7 @@ model Restaurant {
 }
 
 model MenuItem {
-  id           Int      @id @default(autoincrement())
+  id           String   @id @unique
   name         String
   description  String?
   price        Decimal  @db.Decimal(10, 2)
@@ -36,7 +36,7 @@ model MenuItem {
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
-  restaurantId Int
+  restaurantId String
   restaurant   Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
 
   @@map("menu_items")
@@ -49,4 +49,14 @@ enum Category {
   DRINK
 
   @@map("category")
+}
+
+model User {
+  id        String   @id @unique
+  username  String   @unique
+  password  String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("users")
 }

@@ -1,11 +1,11 @@
 import type { Context } from "hono";
 import { menuItemService } from "../services/menuItem.service";
 import { createMenuItemSchema, updateMenuItemSchema, menuItemFilterSchema } from "../validators/menuItem.validator";
-import { sendCreated, sendError, sendSuccess } from "../utils/responses";
+import { sendCreated, sendDeleted, sendError, sendSuccess } from "../utils/responses";
 
 export const menuItemController = {
     async getByRestaurant(c: Context) {
-        const restaurantId = Number(c.req.param("id"));
+        const restaurantId = String(c.req.param("id"));
         const query = menuItemFilterSchema.safeParse(c.req.query());
 
         if (!query.success) {
@@ -17,7 +17,7 @@ export const menuItemController = {
     },
 
     async create(c: Context) {
-        const restaurantId = Number(c.req.param("id"));
+        const restaurantId = String(c.req.param("id"));
         const body = await c.req.json();
         const parsed = createMenuItemSchema.safeParse(body);
 
@@ -26,11 +26,11 @@ export const menuItemController = {
         }
 
         const data = await menuItemService.create(restaurantId, parsed.data);
-        return sendCreated(c, data);
+        return sendCreated(c, data, "Menu Item created sucessfully");
     },
 
     async update(c: Context) {
-        const id = Number(c.req.param("id"));
+        const id = String(c.req.param("id"));
         const body = await c.req.json();
         const parsed = updateMenuItemSchema.safeParse(body);
 
@@ -43,8 +43,8 @@ export const menuItemController = {
     },
 
     async delete(c: Context) {
-        const id = Number(c.req.param("id"));
+        const id = String(c.req.param("id"));
         await menuItemService.delete(id);
-        return c.body(null, 204);
+        return sendDeleted(c, "Menu item deleted succesfully");
     },
 };

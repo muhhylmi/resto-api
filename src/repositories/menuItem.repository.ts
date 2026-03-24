@@ -1,8 +1,9 @@
+import { ulid } from "ulid";
 import { prisma } from "../utils/prisma";
 import type { CreateMenuItemDTO, UpdateMenuItemDTO, MenuItemFilterDTO } from "../validators/menuItem.validator";
 
 export const menuItemRepository = {
-    findByRestaurant(restaurantId: number, filter: MenuItemFilterDTO) {
+    findByRestaurant(restaurantId: string, filter: MenuItemFilterDTO) {
         const { category, name, page, limit } = filter;
         const skip = (page - 1) * limit;
 
@@ -18,7 +19,7 @@ export const menuItemRepository = {
         });
     },
 
-    countByRestaurant(restaurantId: number, filter: Pick<MenuItemFilterDTO, "category" | "name">) {
+    countByRestaurant(restaurantId: string, filter: Pick<MenuItemFilterDTO, "category" | "name">) {
         return prisma.menuItem.count({
             where: {
                 restaurantId,
@@ -28,24 +29,24 @@ export const menuItemRepository = {
         });
     },
 
-    findById(id: number) {
+    findById(id: string) {
         return prisma.menuItem.findUnique({ where: { id } });
     },
 
-    create(restaurantId: number, data: CreateMenuItemDTO) {
+    create(restaurantId: string, data: CreateMenuItemDTO) {
         return prisma.menuItem.create({
-            data: { ...data, price: data.price.toString(), restaurantId },
+            data: { ...data, price: data.price.toString(), restaurantId, id: ulid() },
         });
     },
 
-    update(id: number, data: UpdateMenuItemDTO) {
+    update(id: string, data: UpdateMenuItemDTO) {
         return prisma.menuItem.update({
             where: { id },
             data: { ...data, ...(data.price && { price: data.price.toString() }) },
         });
     },
 
-    delete(id: number) {
+    delete(id: string) {
         return prisma.menuItem.delete({ where: { id } });
     },
 };

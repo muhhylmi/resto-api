@@ -4,6 +4,8 @@ import { cors } from "hono/cors";
 import { AppError } from "./middlewares/errorHandler";
 import restaurantRoutes from "./routes/restaurant.route";
 import menuItemRoutes from "./routes/menuItem.route";
+import authRoutes from "./routes/auth.route";
+
 import { PrismaInstance } from "./utils/prisma";
 
 const app = new Hono().basePath("/api");
@@ -12,6 +14,7 @@ app.use("*", logger());
 app.use("*", cors());
 
 app.get("/", (c) => c.json({ message: "Restaurant API v1" }));
+app.route("/auth", authRoutes);
 app.route("/restaurants", restaurantRoutes);
 app.route("/menu-items", menuItemRoutes);
 

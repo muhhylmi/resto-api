@@ -29,3 +29,21 @@ export const sendError = (c: Context, statusCode: number, message: string, error
         statusCode as any
     );
 };
+
+export const sendPagination = (c: Context, data: unknown, meta: unknown, message = "Success") => {
+    return c.json({
+        success: true,
+        message,
+        data,
+        meta,
+    });
+};
+
+export const sendDeleted = (c: Context, message = "Success") => {
+    return c.json(
+        {
+            success: true,
+            message,
+        },
+        204 as any);
+};
