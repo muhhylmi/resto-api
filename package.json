@@ -8,7 +8,8 @@
     "start": "bun run src/index.ts",
     "test": "bun test",
     "test:watch": "bun test --watch",
-    "test:coverage": "bun test --coverage"
+    "test:coverage": "bun test --coverage",
+    "seed": "bun prisma/seed.ts"
   },
   "devDependencies": {
     "@types/bun": "latest"
