@@ -1,0 +1,60 @@
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: restaurant_mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-rootpassword}
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-restaurant_db}
+      MYSQL_USER: ${MYSQL_USER:-appuser}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-apppassword}
+    ports:
+      - "3308:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./docker/mysql/init.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "mysqladmin",
+          "ping",
+          "-h",
+          "localhost",
+          "-u",
+          "root",
+          "-p${MYSQL_ROOT_PASSWORD:-rootpassword}",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 60s
+
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: restaurant_api
+    restart: unless-stopped
+    ports:
+      - "${PORT:-3000}:3000"
+    environment:
+      DATABASE_URL: mysql://${MYSQL_USER:-appuser}:${MYSQL_PASSWORD:-apppassword}@mysql:3306/${MYSQL_DATABASE:-restaurant_db}?allowPublicKeyRetrieval=true&ssl=false
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-86400}
+      NODE_ENV: production
+      DATABASE_USER: ${MYSQL_USER:-appuser}
+      DATABASE_PASSWORD: ${MYSQL_PASSWORD:-apppassword}
+      DATABASE_NAME: ${MYSQL_DATABASE:-restaurant_db}
+      DATABASE_HOST: mysql
+      DATABASE_PORT: 3306
+    depends_on:
+      mysql:
+        condition: service_healthy
+    command: >
+      sh -c "bunx prisma migrate deploy &&
+            bunx prisma db seed &&
+            bun run src/index.ts"
+
+volumes:
+  mysql_data:

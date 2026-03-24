@@ -377,6 +377,28 @@ services:
 docker compose up -d
 ```
 
+
+---
+
+## Running Using docker-compose
+
+If you want to run using docker, you can use this command
+
+```bash
+# Build & run all service
+docker compose up -d --build
+
+# See logs
+docker compose logs -f api
+
+# Stop all
+docker compose down
+
+# Stop + remove volume (reset database)
+docker compose down -v
+```
+
+
 ---
 
 ## License
