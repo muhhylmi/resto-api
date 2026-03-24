@@ -1,0 +1,741 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Restaurant API Documentation</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #0f1117;
+    --bg2: #1a1d27;
+    --bg3: #22263a;
+    --border: #2e3349;
+    --text: #e2e8f0;
+    --muted: #8892a4;
+    --accent: #6c8eff;
+    --GET: #22c55e;
+    --POST: #3b82f6;
+    --PUT: #f59e0b;
+    --DELETE: #ef4444;
+    --GET-bg: #052e16;
+    --POST-bg: #1e3a5f;
+    --PUT-bg: #451a03;
+    --DELETE-bg: #450a0a;
+    --radius: 8px;
+    --mono: 'Fira Code', 'Cascadia Code', 'Consolas', monospace;
+  }
+
+  body { background: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; font-size: 14px; line-height: 1.6; display: flex; min-height: 100vh; }
+
+  /* Sidebar */
+  aside { width: 260px; min-width: 260px; background: var(--bg2); border-right: 1px solid var(--border); padding: 24px 0; position: sticky; top: 0; height: 100vh; overflow-y: auto; }
+  .sidebar-logo { padding: 0 20px 20px; border-bottom: 1px solid var(--border); margin-bottom: 16px; }
+  .sidebar-logo h2 { font-size: 15px; color: var(--text); font-weight: 600; }
+  .sidebar-logo span { font-size: 11px; color: var(--muted); background: var(--bg3); padding: 2px 8px; border-radius: 20px; }
+  .sidebar-section { padding: 8px 20px 4px; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: var(--muted); }
+  .sidebar-link { display: flex; align-items: center; gap: 8px; padding: 7px 20px; cursor: pointer; color: var(--muted); font-size: 13px; text-decoration: none; transition: all .15s; border-left: 2px solid transparent; }
+  .sidebar-link:hover { color: var(--text); background: var(--bg3); }
+  .sidebar-link.active { color: var(--accent); border-left-color: var(--accent); background: rgba(108,142,255,.08); }
+  .method-badge { font-size: 10px; font-weight: 700; padding: 1px 6px; border-radius: 4px; min-width: 44px; text-align: center; }
+  .GET  { color: var(--GET);    background: var(--GET-bg); }
+  .POST { color: var(--POST);   background: var(--POST-bg); }
+  .PUT  { color: var(--PUT);    background: var(--PUT-bg); }
+  .DELETE { color: var(--DELETE); background: var(--DELETE-bg); }
+
+  /* Main */
+  main { flex: 1; padding: 40px 48px; max-width: 900px; }
+  section { margin-bottom: 56px; scroll-margin-top: 24px; }
+  h1 { font-size: 28px; font-weight: 700; margin-bottom: 6px; }
+  h1 span { color: var(--accent); }
+  .subtitle { color: var(--muted); margin-bottom: 32px; font-size: 14px; }
+  h2 { font-size: 18px; font-weight: 600; margin-bottom: 16px; padding-bottom: 8px; border-bottom: 1px solid var(--border); }
+  h3 { font-size: 14px; font-weight: 600; margin-bottom: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: .5px; }
+
+  /* Info cards */
+  .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 32px; }
+  .info-card { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; }
+  .info-card label { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .5px; display: block; margin-bottom: 4px; }
+  .info-card value { font-size: 14px; font-family: var(--mono); color: var(--accent); }
+
+  /* Endpoint card */
+  .endpoint { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius); margin-bottom: 12px; overflow: hidden; }
+  .endpoint-header { display: flex; align-items: center; gap: 12px; padding: 14px 16px; cursor: pointer; user-select: none; }
+  .endpoint-header:hover { background: var(--bg3); }
+  .endpoint-path { font-family: var(--mono); font-size: 13px; flex: 1; }
+  .endpoint-desc { font-size: 12px; color: var(--muted); }
+  .lock-icon { font-size: 11px; color: var(--muted); }
+  .endpoint-body { border-top: 1px solid var(--border); padding: 20px; display: none; }
+  .endpoint-body.open { display: block; }
+
+  /* Tabs */
+  .tabs { display: flex; gap: 2px; margin-bottom: 16px; background: var(--bg3); padding: 3px; border-radius: 6px; width: fit-content; }
+  .tab { padding: 5px 14px; border-radius: 4px; cursor: pointer; font-size: 12px; color: var(--muted); transition: all .15s; }
+  .tab.active { background: var(--bg2); color: var(--text); }
+  .tab-content { display: none; }
+  .tab-content.active { display: block; }
+
+  /* Code */
+  pre { background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; overflow-x: auto; font-family: var(--mono); font-size: 12px; line-height: 1.7; }
+  code { font-family: var(--mono); font-size: 12px; }
+  .key   { color: #7dd3fc; }
+  .str   { color: #86efac; }
+  .num   { color: #fb923c; }
+  .bool  { color: #c084fc; }
+  .null  { color: #94a3b8; }
+  .cm    { color: #64748b; font-style: italic; }
+
+  /* Params table */
+  table { width: 100%; border-collapse: collapse; margin-bottom: 16px; font-size: 13px; }
+  th { text-align: left; padding: 8px 12px; background: var(--bg3); color: var(--muted); font-size: 11px; text-transform: uppercase; letter-spacing: .5px; font-weight: 600; }
+  td { padding: 10px 12px; border-top: 1px solid var(--border); vertical-align: top; }
+  td code { background: var(--bg3); padding: 2px 6px; border-radius: 4px; font-size: 11px; }
+  .required { color: var(--DELETE); font-size: 10px; font-weight: 700; }
+  .optional { color: var(--muted); font-size: 10px; }
+
+  /* Status codes */
+  .status-list { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px; }
+  .status { padding: 4px 10px; border-radius: 20px; font-size: 12px; font-family: var(--mono); font-weight: 600; }
+  .s2xx { background: var(--GET-bg); color: var(--GET); }
+  .s4xx { background: var(--DELETE-bg); color: var(--DELETE); }
+  .s5xx { background: #1c1917; color: #f97316; }
+
+  /* Base URL highlight */
+  .base-url { background: var(--bg2); border: 1px solid var(--border); border-left: 3px solid var(--accent); border-radius: var(--radius); padding: 12px 16px; font-family: var(--mono); font-size: 13px; margin-bottom: 24px; color: var(--accent); }
+
+  .divider { height: 1px; background: var(--border); margin: 32px 0; }
+
+  /* Auth note */
+  .auth-note { background: rgba(108,142,255,.08); border: 1px solid rgba(108,142,255,.2); border-radius: var(--radius); padding: 12px 16px; font-size: 13px; color: var(--muted); margin-bottom: 16px; }
+  .auth-note strong { color: var(--accent); }
+</style>
+</head>
+<body>
+
+<aside>
+  <div class="sidebar-logo">
+    <h2>Restaurant API</h2>
+    <span>v1.0.0</span>
+  </div>
+
+  <div class="sidebar-section">Overview</div>
+  <a class="sidebar-link active" onclick="scrollTo('intro')">Introduction</a>
+  <a class="sidebar-link" onclick="scrollTo('auth-section')">Authentication</a>
+  <a class="sidebar-link" onclick="scrollTo('errors-section')">Error Handling</a>
+
+  <div class="sidebar-section">Auth</div>
+  <a class="sidebar-link" onclick="scrollTo('auth-endpoints')"><span class="method-badge POST">POST</span> Register</a>
+  <a class="sidebar-link" onclick="scrollTo('auth-endpoints')"><span class="method-badge POST">POST</span> Login</a>
+
+  <div class="sidebar-section">Restaurants</div>
+  <a class="sidebar-link" onclick="scrollTo('rest-list')"><span class="method-badge GET">GET</span> List all</a>
+  <a class="sidebar-link" onclick="scrollTo('rest-create')"><span class="method-badge POST">POST</span> Create</a>
+  <a class="sidebar-link" onclick="scrollTo('rest-detail')"><span class="method-badge GET">GET</span> Get by ID</a>
+  <a class="sidebar-link" onclick="scrollTo('rest-update')"><span class="method-badge PUT">PUT</span> Update</a>
+  <a class="sidebar-link" onclick="scrollTo('rest-delete')"><span class="method-badge DELETE">DEL</span> Delete</a>
+
+  <div class="sidebar-section">Menu Items</div>
+  <a class="sidebar-link" onclick="scrollTo('menu-list')"><span class="method-badge GET">GET</span> List by restaurant</a>
+  <a class="sidebar-link" onclick="scrollTo('menu-create')"><span class="method-badge POST">POST</span> Add item</a>
+  <a class="sidebar-link" onclick="scrollTo('menu-update')"><span class="method-badge PUT">PUT</span> Update item</a>
+  <a class="sidebar-link" onclick="scrollTo('menu-delete')"><span class="method-badge DELETE">DEL</span> Delete item</a>
+</aside>
+
+<main>
+
+  <!-- INTRO -->
+  <section id="intro">
+    <h1>Restaurant <span>API</span> Docs</h1>
+    <p class="subtitle">RESTful API built with Hono + Bun + Prisma + MySQL</p>
+
+    <div class="info-grid">
+      <div class="info-card"><label>Base URL</label><value>http://localhost:3000/api/v1</value></div>
+      <div class="info-card"><label>Version</label><value>v1.0.0</value></div>
+      <div class="info-card"><label>Content-Type</label><value>application/json</value></div>
+      <div class="info-card"><label>Auth</label><value>Bearer JWT Token</value></div>
+    </div>
+
+    <div class="base-url">http://localhost:3000/api/v1</div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- AUTH INFO -->
+  <section id="auth-section">
+    <h2>Authentication</h2>
+    <p style="color:var(--muted);margin-bottom:16px;">All endpoints except <code>/auth/register</code> and <code>/auth/login</code> require a valid JWT token in the Authorization header.</p>
+    <pre><span class="key">Authorization</span>: Bearer &lt;your_jwt_token&gt;</pre>
+    <br/>
+    <p style="color:var(--muted);font-size:13px;">Token expires in <strong style="color:var(--text)">24 hours</strong> (86400 seconds). Re-login to get a new token.</p>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- ERROR HANDLING -->
+  <section id="errors-section">
+    <h2>Error Handling</h2>
+    <p style="color:var(--muted);margin-bottom:16px;">All responses follow a consistent shape.</p>
+
+    <h3>Success Response</h3>
+    <pre>{
+  <span class="key">"success"</span>: <span class="bool">true</span>,
+  <span class="key">"message"</span>: <span class="str">"Success"</span>,
+  <span class="key">"data"</span>: { <span class="cm">/* payload */</span> }
+}</pre>
+    <br/>
+    <h3>Error Response</h3>
+    <pre>{
+  <span class="key">"success"</span>: <span class="bool">false</span>,
+  <span class="key">"message"</span>: <span class="str">"Validation failed"</span>,
+  <span class="key">"errors"</span>: {
+    <span class="key">"name"</span>: [<span class="str">"Name is required"</span>]
+  }
+}</pre>
+    <br/>
+    <h3>HTTP Status Codes</h3>
+    <div class="status-list">
+      <span class="status s2xx">200 OK</span>
+      <span class="status s2xx">201 Created</span>
+      <span class="status s2xx">204 No Content</span>
+      <span class="status s4xx">400 Bad Request</span>
+      <span class="status s4xx">401 Unauthorized</span>
+      <span class="status s4xx">404 Not Found</span>
+      <span class="status s4xx">409 Conflict</span>
+      <span class="status s5xx">500 Internal Server Error</span>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- AUTH ENDPOINTS -->
+  <section id="auth-endpoints">
+    <h2>Auth</h2>
+
+    <!-- Register -->
+    <div class="endpoint">
+      <div class="endpoint-header" onclick="toggle(this)">
+        <span class="method-badge POST">POST</span>
+        <span class="endpoint-path">/auth/register</span>
+        <span class="endpoint-desc">Register new user</span>
+      </div>
+      <div class="endpoint-body">
+        <div class="tabs">
+          <div class="tab active" onclick="switchTab(this,'req')">Request</div>
+          <div class="tab" onclick="switchTab(this,'res')">Response</div>
+        </div>
+        <div class="tab-content active" data-tab="req">
+          <h3>Body</h3>
+          <table>
+            <tr><th>Field</th><th>Type</th><th>Required</th><th>Description</th></tr>
+            <tr><td><code>username</code></td><td>string</td><td><span class="required">required</span></td><td>Min 1 character</td></tr>
+            <tr><td><code>password</code></td><td>string</td><td><span class="required">required</span></td><td>Min 6 characters</td></tr>
+          </table>
+          <pre>{
+  <span class="key">"username"</span>: <span class="str">"admin"</span>,
+  <span class="key">"password"</span>: <span class="str">"secret123"</span>
+}</pre>
+        </div>
+        <div class="tab-content" data-tab="res">
+          <div class="status-list"><span class="status s2xx">201 Created</span><span class="status s4xx">400 Bad Request</span><span class="status s4xx">409 Conflict</span></div>
+          <pre>{
+  <span class="key">"success"</span>: <span class="bool">true</span>,
+  <span class="key">"message"</span>: <span class="str">"User registered successfully"</span>,
+  <span class="key">"data"</span>: {
+    <span class="key">"token"</span>: <span class="str">"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."</span>,
+    <span class="key">"user"</span>: {
+      <span class="key">"id"</span>: <span class="num">1</span>,
+      <span class="key">"username"</span>: <span class="str">"admin"</span>
+    }
+  }
+}</pre>
+        </div>
+      </div>
+    </div>
+
+    <!-- Login -->
+    <div class="endpoint">
+      <div class="endpoint-header" onclick="toggle(this)">
+        <span class="method-badge POST">POST</span>
+        <span class="endpoint-path">/auth/login</span>
+        <span class="endpoint-desc">Login and get JWT token</span>
+      </div>
+      <div class="endpoint-body">
+        <div class="tabs">
+          <div class="tab active" onclick="switchTab(this,'req')">Request</div>
+          <div class="tab" onclick="switchTab(this,'res')">Response</div>
+        </div>
+        <div class="tab-content active" data-tab="req">
+          <h3>Body</h3>
+          <table>
+            <tr><th>Field</th><th>Type</th><th>Required</th><th>Description</th></tr>
+            <tr><td><code>username</code></td><td>string</td><td><span class="required">required</span></td><td></td></tr>
+            <tr><td><code>password</code></td><td>string</td><td><span class="required">required</span></td><td></td></tr>
+          </table>
+          <pre>{
+  <span class="key">"username"</span>: <span class="str">"admin"</span>,
+  <span class="key">"password"</span>: <span class="str">"secret123"</span>
+}</pre>
+        </div>
+        <div class="tab-content" data-tab="res">
+          <div class="status-list"><span class="status s2xx">200 OK</span><span class="status s4xx">400 Bad Request</span><span class="status s4xx">401 Unauthorized</span></div>
+          <pre>{
+  <span class="key">"success"</span>: <span class="bool">true</span>,
+  <span class="key">"message"</span>: <span class="str">"Login successful"</span>,
+  <span class="key">"data"</span>: {
+    <span class="key">"token"</span>: <span class="str">"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."</span>,
+    <span class="key">"user"</span>: {
+      <span class="key">"id"</span>: <span class="num">1</span>,
+      <span class="key">"username"</span>: <span class="str">"admin"</span>
+    }
+  }
+}</pre>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- RESTAURANTS -->
+  <section>
+    <h2>Restaurants</h2>
+    <div class="auth-note">🔒 All restaurant endpoints require <strong>Bearer token</strong></div>
+
+    <!-- GET ALL -->
+    <div class="endpoint" id="rest-list">
+      <div class="endpoint-header" onclick="toggle(this)">
+        <span class="method-badge GET">GET</span>
+        <span class="endpoint-path">/restaurants</span>
+        <span class="endpoint-desc">List all restaurants with pagination & search</span>
+        <span class="lock-icon">🔒</span>
+      </div>
+      <div class="endpoint-body">
+        <div class="tabs">
+          <div class="tab active" onclick="switchTab(this,'req')">Request</div>
+          <div class="tab" onclick="switchTab(this,'res')">Response</div>
+        </div>
+        <div class="tab-content active" data-tab="req">
+          <h3>Query Parameters</h3>
+          <table>
+            <tr><th>Param</th><th>Type</th><th>Default</th><th>Description</th></tr>
+            <tr><td><code>search</code></td><td>string</td><td>-</td><td>Search by name, address, or phone</td></tr>
+            <tr><td><code>page</code></td><td>number</td><td>1</td><td>Page number</td></tr>
+            <tr><td><code>limit</code></td><td>number</td><td>10</td><td>Items per page (max 100)</td></tr>
+          </table>
+          <pre><span class="cm">// GET /restaurants?search=warung&page=1&limit=10</span></pre>
+        </div>
+        <div class="tab-content" data-tab="res">
+          <div class="status-list"><span class="status s2xx">200 OK</span><span class="status s4xx">400 Bad Request</span><span class="status s4xx">401 Unauthorized</span></div>
+          <pre>{
+  <span class="key">"success"</span>: <span class="bool">true</span>,
+  <span class="key">"message"</span>: <span class="str">"Restaurants retrieved successfully"</span>,
+  <span class="key">"data"</span>: {
+    <span class="key">"data"</span>: [
+      {
+        <span class="key">"id"</span>: <span class="num">1</span>,
+        <span class="key">"name"</span>: <span class="str">"Warung Nusantara"</span>,
+        <span class="key">"address"</span>: <span class="str">"Jl. Sudirman No. 10, Jakarta"</span>,
+        <span class="key">"phone"</span>: <span class="str">"021-1234567"</span>,
+        <span class="key">"opening_hours"</span>: <span class="str">"08:00 - 22:00"</span>,
+        <span class="key">"createdAt"</span>: <span class="str">"2025-01-01T00:00:00.000Z"</span>,
+        <span class="key">"updatedAt"</span>: <span class="str">"2025-01-01T00:00:00.000Z"</span>
+      }
+    ],
+    <span class="key">"meta"</span>: {
+      <span class="key">"total"</span>: <span class="num">20</span>,
+      <span class="key">"page"</span>: <span class="num">1</span>,
+      <span class="key">"limit"</span>: <span class="num">10</span>,
+      <span class="key">"totalPages"</span>: <span class="num">2</span>
+    }
+  }
+}</pre>
+        </div>
+      </div>
+    </div>
+
+    <!-- CREATE -->
+    <div class="endpoint" id="rest-create">
+      <div class="endpoint-header" onclick="toggle(this)">
+        <span class="method-badge POST">POST</span>
+        <span class="endpoint-path">/restaurants</span>
+        <span class="endpoint-desc">Create a new restaurant</span>
+        <span class="lock-icon">🔒</span>
+      </div>
+      <div class="endpoint-body">
+        <div class="tabs">
+          <div class="tab active" onclick="switchTab(this,'req')">Request</div>
+          <div class="tab" onclick="switchTab(this,'res')">Response</div>
+        </div>
+        <div class="tab-content active" data-tab="req">
+          <h3>Body</h3>
+          <table>
+            <tr><th>Field</th><th>Type</th><th>Required</th><th>Description</th></tr>
+            <tr><td><code>name</code></td><td>string</td><td><span class="required">required</span></td><td>Restaurant name</td></tr>
+            <tr><td><code>address</code></td><td>string</td><td><span class="required">required</span></td><td>Full address</td></tr>
+            <tr><td><code>phone</code></td><td>string</td><td><span class="optional">optional</span></td><td>Phone number</td></tr>
+            <tr><td><code>opening_hours</code></td><td>string</td><td><span class="optional">optional</span></td><td>e.g. "08:00 - 22:00"</td></tr>
+          </table>
+          <pre>{
+  <span class="key">"name"</span>: <span class="str">"Warung Baru"</span>,
+  <span class="key">"address"</span>: <span class="str">"Jl. Merdeka No. 1, Jakarta"</span>,
+  <span class="key">"phone"</span>: <span class="str">"021-9999999"</span>,
+  <span class="key">"opening_hours"</span>: <span class="str">"09:00 - 21:00"</span>
+}</pre>
+        </div>
+        <div class="tab-content" data-tab="res">
+          <div class="status-list"><span class="status s2xx">201 Created</span><span class="status s4xx">400 Bad Request</span><span class="status s4xx">401 Unauthorized</span></div>
+          <pre>{
+  <span class="key">"success"</span>: <span class="bool">true</span>,
+  <span class="key">"message"</span>: <span class="str">"success create data"</span>,
+  <span class="key">"data"</span>: {
+    <span class="key">"id"</span>: <span class="num">3</span>,
+    <span class="key">"name"</span>: <span class="str">"Warung Baru"</span>,
+    <span class="key">"address"</span>: <span class="str">"Jl. Merdeka No. 1, Jakarta"</span>,
+    <span class="key">"phone"</span>: <span class="str">"021-9999999"</span>,
+    <span class="key">"opening_hours"</span>: <span class="str">"09:00 - 21:00"</span>,
+    <span class="key">"createdAt"</span>: <span class="str">"2025-01-01T00:00:00.000Z"</span>,
+    <span class="key">"updatedAt"</span>: <span class="str">"2025-01-01T00:00:00.000Z"</span>
+  }
+}</pre>
+        </div>
+      </div>
+    </div>
+
+    <!-- GET BY ID -->
+    <div class="endpoint" id="rest-detail">
+      <div class="endpoint-header" onclick="toggle(this)">
+        <span class="method-badge GET">GET</span>
+        <span class="endpoint-path">/restaurants/:id</span>
+        <span class="endpoint-desc">Get restaurant detail with menu items</span>
+        <span class="lock-icon">🔒</span>
+      </div>
+      <div class="endpoint-body">
+        <div class="tabs">
+          <div class="tab active" onclick="switchTab(this,'req')">Request</div>
+          <div class="tab" onclick="switchTab(this,'res')">Response</div>
+        </div>
+        <div class="tab-content active" data-tab="req">
+          <h3>Path Parameter</h3>
+          <table>
+            <tr><th>Param</th><th>Type</th><th>Description</th></tr>
+            <tr><td><code>id</code></td><td>number</td><td>Restaurant ID</td></tr>
+          </table>
+        </div>
+        <div class="tab-content" data-tab="res">
+          <div class="status-list"><span class="status s2xx">200 OK</span><span class="status s4xx">401 Unauthorized</span><span class="status s4xx">404 Not Found</span></div>
+          <pre>{
+  <span class="key">"success"</span>: <span class="bool">true</span>,
+  <span class="key">"message"</span>: <span class="str">"Restaurant retrieved successfully"</span>,
+  <span class="key">"data"</span>: {
+    <span class="key">"id"</span>: <span class="num">1</span>,
+    <span class="key">"name"</span>: <span class="str">"Warung Nusantara"</span>,
+    <span class="key">"address"</span>: <span class="str">"Jl. Sudirman No. 10"</span>,
+    <span class="key">"phone"</span>: <span class="str">"021-1234567"</span>,
+    <span class="key">"opening_hours"</span>: <span class="str">"08:00 - 22:00"</span>,
+    <span class="key">"menuItems"</span>: [
+      {
+        <span class="key">"id"</span>: <span class="num">1</span>,
+        <span class="key">"name"</span>: <span class="str">"Nasi Goreng"</span>,
+        <span class="key">"price"</span>: <span class="str">"35000.00"</span>,
+        <span class="key">"category"</span>: <span class="str">"MAIN"</span>,
+        <span class="key">"is_available"</span>: <span class="bool">true</span>
+      }
+    ]
+  }
+}</pre>
+        </div>
+      </div>
+    </div>
+
+    <!-- UPDATE -->
+    <div class="endpoint" id="rest-update">
+      <div class="endpoint-header" onclick="toggle(this)">
+        <span class="method-badge PUT">PUT</span>
+        <span class="endpoint-path">/restaurants/:id</span>
+        <span class="endpoint-desc">Update a restaurant (partial update supported)</span>
+        <span class="lock-icon">🔒</span>
+      </div>
+      <div class="endpoint-body">
+        <div class="tabs">
+          <div class="tab active" onclick="switchTab(this,'req')">Request</div>
+          <div class="tab" onclick="switchTab(this,'res')">Response</div>
+        </div>
+        <div class="tab-content active" data-tab="req">
+          <h3>Path Parameter</h3>
+          <table>
+            <tr><th>Param</th><th>Type</th><th>Description</th></tr>
+            <tr><td><code>id</code></td><td>number</td><td>Restaurant ID</td></tr>
+          </table>
+          <h3>Body (all optional)</h3>
+          <table>
+            <tr><th>Field</th><th>Type</th><th>Description</th></tr>
+            <tr><td><code>name</code></td><td>string</td><td>Restaurant name</td></tr>
+            <tr><td><code>address</code></td><td>string</td><td>Full address</td></tr>
+            <tr><td><code>phone</code></td><td>string</td><td>Phone number</td></tr>
+            <tr><td><code>opening_hours</code></td><td>string</td><td>Operating hours</td></tr>
+          </table>
+          <pre>{
+  <span class="key">"name"</span>: <span class="str">"Warung Updated"</span>,
+  <span class="key">"phone"</span>: <span class="str">"021-8888888"</span>
+}</pre>
+        </div>
+        <div class="tab-content" data-tab="res">
+          <div class="status-list"><span class="status s2xx">200 OK</span><span class="status s4xx">400 Bad Request</span><span class="status s4xx">401 Unauthorized</span><span class="status s4xx">404 Not Found</span></div>
+          <pre>{
+  <span class="key">"success"</span>: <span class="bool">true</span>,
+  <span class="key">"message"</span>: <span class="str">"Restaurant updated successfully"</span>,
+  <span class="key">"data"</span>: { <span class="cm">/* updated restaurant object */</span> }
+}</pre>
+        </div>
+      </div>
+    </div>
+
+    <!-- DELETE -->
+    <div class="endpoint" id="rest-delete">
+      <div class="endpoint-header" onclick="toggle(this)">
+        <span class="method-badge DELETE">DEL</span>
+        <span class="endpoint-path">/restaurants/:id</span>
+        <span class="endpoint-desc">Delete a restaurant (cascades to menu items)</span>
+        <span class="lock-icon">🔒</span>
+      </div>
+      <div class="endpoint-body">
+        <div class="tabs">
+          <div class="tab active" onclick="switchTab(this,'req')">Request</div>
+          <div class="tab" onclick="switchTab(this,'res')">Response</div>
+        </div>
+        <div class="tab-content active" data-tab="req">
+          <h3>Path Parameter</h3>
+          <table>
+            <tr><th>Param</th><th>Type</th><th>Description</th></tr>
+            <tr><td><code>id</code></td><td>number</td><td>Restaurant ID</td></tr>
+          </table>
+          <p style="color:var(--muted);font-size:13px;">⚠️ Deleting a restaurant will also delete all its menu items (cascade).</p>
+        </div>
+        <div class="tab-content" data-tab="res">
+          <div class="status-list"><span class="status s2xx">204 No Content</span><span class="status s4xx">401 Unauthorized</span><span class="status s4xx">404 Not Found</span></div>
+          <pre><span class="cm">// 204 No Content — empty response body</span></pre>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- MENU ITEMS -->
+  <section>
+    <h2>Menu Items</h2>
+    <div class="auth-note">🔒 All menu item endpoints require <strong>Bearer token</strong></div>
+
+    <!-- LIST MENU ITEMS -->
+    <div class="endpoint" id="menu-list">
+      <div class="endpoint-header" onclick="toggle(this)">
+        <span class="method-badge GET">GET</span>
+        <span class="endpoint-path">/restaurants/:id/menu_items</span>
+        <span class="endpoint-desc">List menu items with filter & pagination</span>
+        <span class="lock-icon">🔒</span>
+      </div>
+      <div class="endpoint-body">
+        <div class="tabs">
+          <div class="tab active" onclick="switchTab(this,'req')">Request</div>
+          <div class="tab" onclick="switchTab(this,'res')">Response</div>
+        </div>
+        <div class="tab-content active" data-tab="req">
+          <h3>Path Parameter</h3>
+          <table>
+            <tr><th>Param</th><th>Type</th><th>Description</th></tr>
+            <tr><td><code>id</code></td><td>number</td><td>Restaurant ID</td></tr>
+          </table>
+          <h3>Query Parameters</h3>
+          <table>
+            <tr><th>Param</th><th>Type</th><th>Default</th><th>Description</th></tr>
+            <tr><td><code>category</code></td><td>enum</td><td>-</td><td>APPETIZER | MAIN | DESSERT | DRINK</td></tr>
+            <tr><td><code>name</code></td><td>string</td><td>-</td><td>Search by item name</td></tr>
+            <tr><td><code>page</code></td><td>number</td><td>1</td><td>Page number</td></tr>
+            <tr><td><code>limit</code></td><td>number</td><td>10</td><td>Items per page (max 100)</td></tr>
+          </table>
+          <pre><span class="cm">// GET /restaurants/1/menu_items?category=MAIN&name=nasi&page=1&limit=10</span></pre>
+        </div>
+        <div class="tab-content" data-tab="res">
+          <div class="status-list"><span class="status s2xx">200 OK</span><span class="status s4xx">400 Bad Request</span><span class="status s4xx">401 Unauthorized</span><span class="status s4xx">404 Not Found</span></div>
+          <pre>{
+  <span class="key">"success"</span>: <span class="bool">true</span>,
+  <span class="key">"message"</span>: <span class="str">"Success retrieve menu items"</span>,
+  <span class="key">"data"</span>: {
+    <span class="key">"data"</span>: [
+      {
+        <span class="key">"id"</span>: <span class="num">1</span>,
+        <span class="key">"name"</span>: <span class="str">"Nasi Goreng"</span>,
+        <span class="key">"description"</span>: <span class="str">"Nasi goreng spesial"</span>,
+        <span class="key">"price"</span>: <span class="str">"35000.00"</span>,
+        <span class="key">"category"</span>: <span class="str">"MAIN"</span>,
+        <span class="key">"is_available"</span>: <span class="bool">true</span>,
+        <span class="key">"restaurantId"</span>: <span class="num">1</span>,
+        <span class="key">"createdAt"</span>: <span class="str">"2025-01-01T00:00:00.000Z"</span>
+      }
+    ],
+    <span class="key">"meta"</span>: {
+      <span class="key">"total"</span>: <span class="num">5</span>,
+      <span class="key">"page"</span>: <span class="num">1</span>,
+      <span class="key">"limit"</span>: <span class="num">10</span>,
+      <span class="key">"totalPages"</span>: <span class="num">1</span>
+    }
+  }
+}</pre>
+        </div>
+      </div>
+    </div>
+
+    <!-- CREATE MENU ITEM -->
+    <div class="endpoint" id="menu-create">
+      <div class="endpoint-header" onclick="toggle(this)">
+        <span class="method-badge POST">POST</span>
+        <span class="endpoint-path">/restaurants/:id/menu_items</span>
+        <span class="endpoint-desc">Add a menu item to a restaurant</span>
+        <span class="lock-icon">🔒</span>
+      </div>
+      <div class="endpoint-body">
+        <div class="tabs">
+          <div class="tab active" onclick="switchTab(this,'req')">Request</div>
+          <div class="tab" onclick="switchTab(this,'res')">Response</div>
+        </div>
+        <div class="tab-content active" data-tab="req">
+          <h3>Path Parameter</h3>
+          <table>
+            <tr><th>Param</th><th>Type</th><th>Description</th></tr>
+            <tr><td><code>id</code></td><td>number</td><td>Restaurant ID</td></tr>
+          </table>
+          <h3>Body</h3>
+          <table>
+            <tr><th>Field</th><th>Type</th><th>Required</th><th>Description</th></tr>
+            <tr><td><code>name</code></td><td>string</td><td><span class="required">required</span></td><td>Item name</td></tr>
+            <tr><td><code>price</code></td><td>number</td><td><span class="required">required</span></td><td>Must be positive</td></tr>
+            <tr><td><code>description</code></td><td>string</td><td><span class="optional">optional</span></td><td>Item description</td></tr>
+            <tr><td><code>category</code></td><td>enum</td><td><span class="optional">optional</span></td><td>APPETIZER | MAIN | DESSERT | DRINK (default: MAIN)</td></tr>
+            <tr><td><code>is_available</code></td><td>boolean</td><td><span class="optional">optional</span></td><td>Default: true</td></tr>
+          </table>
+          <pre>{
+  <span class="key">"name"</span>: <span class="str">"Nasi Goreng"</span>,
+  <span class="key">"description"</span>: <span class="str">"Nasi goreng spesial dengan telur"</span>,
+  <span class="key">"price"</span>: <span class="num">35000</span>,
+  <span class="key">"category"</span>: <span class="str">"MAIN"</span>,
+  <span class="key">"is_available"</span>: <span class="bool">true</span>
+}</pre>
+        </div>
+        <div class="tab-content" data-tab="res">
+          <div class="status-list"><span class="status s2xx">201 Created</span><span class="status s4xx">400 Bad Request</span><span class="status s4xx">401 Unauthorized</span><span class="status s4xx">404 Not Found</span></div>
+          <pre>{
+  <span class="key">"success"</span>: <span class="bool">true</span>,
+  <span class="key">"message"</span>: <span class="str">"Created successfully"</span>,
+  <span class="key">"data"</span>: {
+    <span class="key">"id"</span>: <span class="num">6</span>,
+    <span class="key">"name"</span>: <span class="str">"Nasi Goreng"</span>,
+    <span class="key">"description"</span>: <span class="str">"Nasi goreng spesial dengan telur"</span>,
+    <span class="key">"price"</span>: <span class="str">"35000.00"</span>,
+    <span class="key">"category"</span>: <span class="str">"MAIN"</span>,
+    <span class="key">"is_available"</span>: <span class="bool">true</span>,
+    <span class="key">"restaurantId"</span>: <span class="num">1</span>,
+    <span class="key">"createdAt"</span>: <span class="str">"2025-01-01T00:00:00.000Z"</span>
+  }
+}</pre>
+        </div>
+      </div>
+    </div>
+
+    <!-- UPDATE MENU ITEM -->
+    <div class="endpoint" id="menu-update">
+      <div class="endpoint-header" onclick="toggle(this)">
+        <span class="method-badge PUT">PUT</span>
+        <span class="endpoint-path">/menu_items/:id</span>
+        <span class="endpoint-desc">Update a menu item (partial update supported)</span>
+        <span class="lock-icon">🔒</span>
+      </div>
+      <div class="endpoint-body">
+        <div class="tabs">
+          <div class="tab active" onclick="switchTab(this,'req')">Request</div>
+          <div class="tab" onclick="switchTab(this,'res')">Response</div>
+        </div>
+        <div class="tab-content active" data-tab="req">
+          <h3>Path Parameter</h3>
+          <table>
+            <tr><th>Param</th><th>Type</th><th>Description</th></tr>
+            <tr><td><code>id</code></td><td>number</td><td>Menu item ID</td></tr>
+          </table>
+          <h3>Body (all optional)</h3>
+          <table>
+            <tr><th>Field</th><th>Type</th><th>Description</th></tr>
+            <tr><td><code>name</code></td><td>string</td><td>Item name</td></tr>
+            <tr><td><code>description</code></td><td>string</td><td>Item description</td></tr>
+            <tr><td><code>price</code></td><td>number</td><td>Must be positive</td></tr>
+            <tr><td><code>category</code></td><td>enum</td><td>APPETIZER | MAIN | DESSERT | DRINK</td></tr>
+            <tr><td><code>is_available</code></td><td>boolean</td><td>Availability status</td></tr>
+          </table>
+          <pre>{
+  <span class="key">"price"</span>: <span class="num">40000</span>,
+  <span class="key">"is_available"</span>: <span class="bool">false</span>
+}</pre>
+        </div>
+        <div class="tab-content" data-tab="res">
+          <div class="status-list"><span class="status s2xx">200 OK</span><span class="status s4xx">400 Bad Request</span><span class="status s4xx">401 Unauthorized</span><span class="status s4xx">404 Not Found</span></div>
+          <pre>{
+  <span class="key">"success"</span>: <span class="bool">true</span>,
+  <span class="key">"message"</span>: <span class="str">"Menu item updated successfully"</span>,
+  <span class="key">"data"</span>: { <span class="cm">/* updated menu item object */</span> }
+}</pre>
+        </div>
+      </div>
+    </div>
+
+    <!-- DELETE MENU ITEM -->
+    <div class="endpoint" id="menu-delete">
+      <div class="endpoint-header" onclick="toggle(this)">
+        <span class="method-badge DELETE">DEL</span>
+        <span class="endpoint-path">/menu_items/:id</span>
+        <span class="endpoint-desc">Delete a menu item</span>
+        <span class="lock-icon">🔒</span>
+      </div>
+      <div class="endpoint-body">
+        <div class="tabs">
+          <div class="tab active" onclick="switchTab(this,'req')">Request</div>
+          <div class="tab" onclick="switchTab(this,'res')">Response</div>
+        </div>
+        <div class="tab-content active" data-tab="req">
+          <h3>Path Parameter</h3>
+          <table>
+            <tr><th>Param</th><th>Type</th><th>Description</th></tr>
+            <tr><td><code>id</code></td><td>number</td><td>Menu item ID</td></tr>
+          </table>
+        </div>
+        <div class="tab-content" data-tab="res">
+          <div class="status-list"><span class="status s2xx">204 No Content</span><span class="status s4xx">401 Unauthorized</span><span class="status s4xx">404 Not Found</span></div>
+          <pre><span class="cm">// 204 No Content — empty response body</span></pre>
+        </div>
+      </div>
+    </div>
+
+  </section>
+
+</main>
+
+<script>
+  function toggle(header) {
+    const body = header.nextElementSibling;
+    body.classList.toggle('open');
+  }
+
+  function switchTab(tab, name) {
+    const container = tab.closest('.endpoint-body');
+    container.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    container.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+    tab.classList.add('active');
+    container.querySelector(`.tab-content[data-tab="${name}"]`).classList.add('active');
+  }
+
+  function scrollTo(id) {
+    document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    document.querySelectorAll('.sidebar-link').forEach(l => l.classList.remove('active'));
+    event.currentTarget.classList.add('active');
+  }
+</script>
+</body>
+</html>
